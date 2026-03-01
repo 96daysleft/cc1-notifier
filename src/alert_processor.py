@@ -71,6 +71,7 @@ class AlertProcessor:
             "Machine status",
             current=s.current_status_labels,
             previous=s.previous_status_labels,
+            print_status=s.print_status_label,
             nozzle_temp=s.TempOfNozzle,
             nozzle_target=s.TempTargetNozzle,
             bed_temp=s.TempOfHotbed,
@@ -82,6 +83,12 @@ class AlertProcessor:
             elapsed=s.print_info.CurrentTicks if s.print_info else None,
             eta=s.print_info.TotalTicks if s.print_info else None,
         )
+
+        if s.print_info:
+            logger.debug(
+                "PrintInfo raw",
+                print_info=s.print_info.model_dump(),
+            )
 
         await self._check_status_change(s, status_msg.TimeStamp)
         await self._check_progress_milestones(s, status_msg.TimeStamp)

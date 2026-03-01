@@ -1,5 +1,5 @@
 image:
-  repository: cc1-notifier
+  repository: ghcr.io/96daysleft/cc1-notifier
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -7,9 +7,12 @@ image:
 centauri:
   ip: "192.168.1.1"
   port: "3030"
-  # mainboardId and discordWebhookUrl are sensitive — set via --set or an external secret
+  # mainboardId and discordWebhookUrl are sensitive — set via --set or existingSecret
   mainboardId: ""
   discordWebhookUrl: ""
+  # existingSecret: if set, use this pre-existing Secret instead of creating one.
+  # The secret must contain keys: MAINBOARD_ID and DISCORD_WEBHOOK_URL
+  existingSecret: ""
 
 # Alert behaviour
 notify:

@@ -6,6 +6,8 @@ metadata:
     {{- include "cc1-notifier.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "cc1-notifier.selectorLabels" . | nindent 6 }}
@@ -28,7 +30,7 @@ spec:
             - configMapRef:
                 name: {{ include "cc1-notifier.fullname" . }}
             - secretRef:
-                name: {{ include "cc1-notifier.fullname" . }}
+                name: {{ include "cc1-notifier.secretName" . }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

@@ -21,6 +21,53 @@ class MachineStatus(IntEnum):
             return f"Unknown ({code})"
 
 
+class PrintStatus(IntEnum):
+    """Print job status codes reported in PrintInfo.Status."""
+    IDLE = 0
+    HOMING = 1
+    DROPPING = 2
+    EXPOSURING = 3
+    LIFTING = 4
+    PAUSING = 5
+    PAUSED = 6
+    STOPPING = 7
+    STOPPED = 8
+    COMPLETE = 9
+    FILE_CHECKING = 10
+
+    @classmethod
+    def label(cls, code: int) -> str:
+        try:
+            return cls(code).name.replace("_", " ").title()
+        except ValueError:
+            return f"Unknown ({code})"
+
+
+class PrintErrorCode(IntEnum):
+    """Error codes reported in PrintInfo.ErrorNumber."""
+    NORMAL = 0
+    FILE_MD5_CHECK_FAILED = 1
+    FILE_READ_FAILED = 2
+    RESOLUTION_MISMATCH = 3
+    FORMAT_MISMATCH = 4
+    MACHINE_MODEL_MISMATCH = 5
+
+    @classmethod
+    def label(cls, code: int) -> str:
+        labels = {
+            cls.NORMAL: "Normal",
+            cls.FILE_MD5_CHECK_FAILED: "File MD5 Check Failed",
+            cls.FILE_READ_FAILED: "File Read Failed",
+            cls.RESOLUTION_MISMATCH: "Resolution Mismatch",
+            cls.FORMAT_MISMATCH: "Format Mismatch",
+            cls.MACHINE_MODEL_MISMATCH: "Machine Model Mismatch",
+        }
+        try:
+            return labels[cls(code)]
+        except ValueError:
+            return f"Unknown Error ({code})"
+
+
 MACHINE_STATUS_COLORS = {
     MachineStatus.IDLE: 0x808080,
     MachineStatus.PRINTING: 0x00aaff,
@@ -70,6 +117,25 @@ class PrintInfo(BaseModel):
     Progress: Optional[int] = None
 
     @property
+    def error_label(self) -> str:
+        """Human-readable label for PrintInfo.ErrorNumber."""
+        if self.ErrorNumber is None:
+            return "Normal"
+        return PrintErrorCode.label(self.ErrorNumber)
+
+    @property
+    def has_error(self) -> bool:
+        """True when ErrorNumber indicates an actual error (non-zero)."""
+        return bool(self.ErrorNumber)
+
+    @property
+    def status_label(self) -> str:
+        """Human-readable label for PrintInfo.Status."""
+        if self.Status is None:
+            return "Unknown"
+        return PrintStatus.label(self.Status)
+
+    @property
     def layer_progress_pct(self) -> Optional[int]:
         """Progress 0-100 derived from layer count (more reliable than Progress field)."""
         if self.TotalLayer and self.CurrentLayer is not None:
@@ -104,6 +170,12 @@ class StatusPayload(BaseModel):
     @property
     def current_status_labels(self) -> List[str]:
         return [MachineStatus.label(c) for c in (self.CurrentStatus or [])]
+
+    @property
+    def print_status_label(self) -> str:
+        if self.print_info is None:
+            return "Unknown"
+        return self.print_info.status_label
 
     @property
     def previous_status_labels(self) -> List[str]:

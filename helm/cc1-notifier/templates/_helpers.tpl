@@ -28,6 +28,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
+Secret name — use existingSecret if provided, otherwise the chart-managed one.
+*/}}
+{{- define "cc1-notifier.secretName" -}}
+{{- if .Values.centauri.existingSecret }}
+{{- .Values.centauri.existingSecret }}
+{{- else }}
+{{- include "cc1-notifier.fullname" . }}
+{{- end }}
+{{- end }}
+
+{{/*
 Selector labels
 */}}
 {{- define "cc1-notifier.selectorLabels" -}}
