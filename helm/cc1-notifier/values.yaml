@@ -1,0 +1,39 @@
+image:
+  repository: cc1-notifier
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Centauri printer connection
+centauri:
+  ip: "192.168.1.1"
+  port: "3030"
+  # mainboardId and discordWebhookUrl are sensitive — set via --set or an external secret
+  mainboardId: ""
+  discordWebhookUrl: ""
+
+# Alert behaviour
+notify:
+  onStart: "true"
+  onShutdown: "true"
+
+# Polling
+pollIntervalMinutes: "5"
+maxAlertsPerPoll: "10"
+
+# Misc
+logLevel: "INFO"
+skipConnectionTest: "true"
+
+# Pod settings
+replicaCount: 1
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+
+resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

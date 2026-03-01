@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cc1-notifier.fullname" . }}
+  labels:
+    {{- include "cc1-notifier.labels" . | nindent 4 }}
+data:
+  CENTAURI_IP: {{ .Values.centauri.ip | quote }}
+  CENTAURI_PORT: {{ .Values.centauri.port | quote }}
+  POLL_INTERVAL_MINUTES: {{ .Values.pollIntervalMinutes | quote }}
+  MAX_ALERTS_PER_POLL: {{ .Values.maxAlertsPerPoll | quote }}
+  LOG_LEVEL: {{ .Values.logLevel | quote }}
+  SKIP_CONNECTION_TEST: {{ .Values.skipConnectionTest | quote }}
+  NOTIFY_ON_START: {{ .Values.notify.onStart | quote }}
+  NOTIFY_ON_SHUTDOWN: {{ .Values.notify.onShutdown | quote }}
