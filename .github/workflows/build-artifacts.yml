@@ -91,7 +91,7 @@ jobs:
 
       - name: Create source archive
         run: |
-          tar -czf cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz \
+          tar -czf /tmp/cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz \
             --exclude='.git*' \
             --exclude='__pycache__' \
             --exclude='*.pyc' \
@@ -100,6 +100,7 @@ jobs:
             --exclude='dist' \
             --exclude='build' \
             .
+          mv /tmp/cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz .
 
       - name: Upload artifacts to release
         env:
