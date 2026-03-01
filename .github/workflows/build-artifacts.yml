@@ -70,16 +70,20 @@ jobs:
                       "cc1-notifier=main:main",
                   ],
               },
+              license="MIT",
               classifiers=[
                   "Development Status :: 4 - Beta",
                   "Intended Audience :: System Administrators",
-                  "License :: OSI Approved :: MIT License",
                   "Operating System :: OS Independent",
                   "Programming Language :: Python :: 3",
                   "Programming Language :: Python :: 3.11",
               ],
           )
           EOF
+
+      - name: Create MANIFEST.in
+        run: |
+          echo "include requirements.txt" > MANIFEST.in
 
       - name: Build Python package
         run: |
