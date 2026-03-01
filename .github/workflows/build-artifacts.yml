@@ -22,17 +22,14 @@ jobs:
       - name: Extract and set version tag
         id: version
         run: |
-          # Extract version from release tag
-          VERSION="${{ github.event.release.tag_name }}"
+          # github.ref_name is the tag name (e.g. v1.2.3) on a tag push
+          VERSION="${{ github.ref_name }}"
           # Remove 'v' prefix if present
           CLEAN_VERSION="${VERSION#v}"
-          # Set outputs for use in other steps
           echo "version=${CLEAN_VERSION}" >> $GITHUB_OUTPUT
           echo "full_tag=${VERSION}" >> $GITHUB_OUTPUT
-          # Set environment variables
           echo "VERSION=${CLEAN_VERSION}" >> $GITHUB_ENV
           echo "FULL_TAG=${VERSION}" >> $GITHUB_ENV
-          # Display version info
           echo "Release version: ${VERSION}"
           echo "Clean version: ${CLEAN_VERSION}"
 
@@ -100,32 +97,12 @@ jobs:
             --exclude='build' \
             .
 
-      - name: Upload wheel to release
-        uses: actions/upload-release-asset@v1
+      - name: Upload artifacts to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./dist/cc1_notifier-${{ steps.version.outputs.version }}-py3-none-any.whl
-          asset_name: cc1_notifier-${{ steps.version.outputs.full_tag }}-py3-none-any.whl
-          asset_content_type: application/octet-stream
-
-      - name: Upload source distribution to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./dist/cc1-notifier-${{ steps.version.outputs.version }}.tar.gz
-          asset_name: cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Upload source archive to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz
-          asset_name: cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz
-          asset_content_type: application/gzip
+        run: |
+          gh release upload ${{ steps.version.outputs.full_tag }} \
+            ./dist/cc1_notifier-${{ steps.version.outputs.version }}-py3-none-any.whl \
+            ./dist/cc1-notifier-${{ steps.version.outputs.version }}.tar.gz \
+            ./cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz \
+            --clobber
