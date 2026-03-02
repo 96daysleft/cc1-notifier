@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cc1-notifier"
+dynamic = ["version"]
+description = "Centauri Alert Notifier - WebSocket to Discord notification service"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Centauri Carbon" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "websockets>=11.0.3",
+    "asyncio-mqtt>=0.13.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.5.0",
+    "structlog>=23.2.0",
+    "colorama>=0.4.6",
+    "aiohttp>=3.9.1",
+]
+
+[project.scripts]
+cc1-notifier = "main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools_scm]

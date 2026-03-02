@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Extract and set version tag
         id: version
@@ -41,57 +43,17 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build wheel setuptools
-
-      - name: Create setup.py for packaging
-        run: |
-          cat > setup.py << 'EOF'
-          from setuptools import setup, find_packages
-          
-          with open("README.md", "r", encoding="utf-8") as fh:
-              long_description = fh.read()
-          
-          with open("requirements.txt", "r", encoding="utf-8") as fh:
-              requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
-          
-          setup(
-              name="cc1-notifier",
-              version="${{ steps.version.outputs.version }}",
-              author="Centauri Carbon",
-              description="Centauri Alert Notifier - WebSocket to Discord notification service",
-              long_description=long_description,
-              long_description_content_type="text/markdown",
-              packages=find_packages(),
-              include_package_data=True,
-              install_requires=requirements,
-              python_requires=">=3.11",
-              entry_points={
-                  "console_scripts": [
-                      "cc1-notifier=main:main",
-                  ],
-              },
-              license="MIT",
-              classifiers=[
-                  "Development Status :: 4 - Beta",
-                  "Intended Audience :: System Administrators",
-                  "Operating System :: OS Independent",
-                  "Programming Language :: Python :: 3",
-                  "Programming Language :: Python :: 3.11",
-              ],
-          )
-          EOF
-
-      - name: Create MANIFEST.in
-        run: |
-          echo "include requirements.txt" > MANIFEST.in
+          pip install build wheel setuptools setuptools-scm
 
       - name: Build Python package
         run: |
           python -m build
 
       - name: Create source archive
+        id: source-archive
         run: |
-          tar -czf /tmp/cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz \
+          tar_file="/tmp/cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz"
+          tar -czf ${tar_file} \
             --exclude='.git*' \
             --exclude='__pycache__' \
             --exclude='*.pyc' \
@@ -100,14 +62,16 @@ jobs:
             --exclude='dist' \
             --exclude='build' \
             .
-          mv /tmp/cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz .
+          mv ${tar_file}  .
+          echo "tar-file=${tar_file} >> $GITHUB_OUTPUT
 
       - name: Upload artifacts to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAR_FILE: ${{ steps.source-archive.outputs.tar-file }}
         run: |
           gh release upload ${{ steps.version.outputs.full_tag }} \
             ./dist/cc1_notifier-${{ steps.version.outputs.version }}-py3-none-any.whl \
-            ./dist/cc1-notifier-${{ steps.version.outputs.version }}.tar.gz \
+            ${TAR_FILE} \
             ./cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz \
             --clobber
