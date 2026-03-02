@@ -73,5 +73,4 @@ jobs:
           gh release upload ${{ steps.version.outputs.full_tag }} \
             ./dist/cc1_notifier-${{ steps.version.outputs.version }}-py3-none-any.whl \
             ${TAR_FILE} \
-            ./cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz \
             --clobber
