@@ -49,28 +49,8 @@ jobs:
         run: |
           python -m build
 
-      - name: Create source archive
-        id: source-archive
-        run: |
-          tar_file="/tmp/cc1-notifier-${{ steps.version.outputs.full_tag }}-source.tar.gz"
-          tar -czf ${tar_file} \
-            --exclude='.git*' \
-            --exclude='__pycache__' \
-            --exclude='*.pyc' \
-            --exclude='.venv' \
-            --exclude='venv' \
-            --exclude='dist' \
-            --exclude='build' \
-            .
-          mv ${tar_file}  .
-          echo "tar-file=${tar_file}" >> $GITHUB_OUTPUT
-
-      - name: Upload artifacts to release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAR_FILE: ${{ steps.source-archive.outputs.tar-file }}
-        run: |
-          gh release upload ${{ steps.version.outputs.full_tag }} \
-            ./dist/cc1_notifier-${{ steps.version.outputs.version }}-py3-none-any.whl \
-            ${TAR_FILE} \
-            --clobber
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-package-distributions
+          path: dist/
