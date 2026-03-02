@@ -19,6 +19,7 @@ class AlertNotificationService:
         self.centauri_client = CentauriWebSocketClient()
         self.discord_notifier: Optional[DiscordNotifier] = None
         self.is_running = False
+        self._stopping = False
         self.poll_task: Optional[asyncio.Task] = None
         self.heartbeat_task: Optional[asyncio.Task] = None
         self.websocket_task: Optional[asyncio.Task] = None
@@ -81,6 +82,9 @@ class AlertNotificationService:
     
     async def stop(self) -> None:
         """Stop the alert notification service."""
+        if self._stopping:
+            return
+        self._stopping = True
         logger.info("🛑 Stopping Alert Notification Service...")
         
         self.is_running = False
@@ -264,5 +268,4 @@ if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n👋 Service interrupted by user")
         sys.exit(0)

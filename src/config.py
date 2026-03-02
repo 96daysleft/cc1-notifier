@@ -25,8 +25,14 @@ def get_config() -> ConfigModel:
             max_alerts_per_poll=int(os.getenv('MAX_ALERTS_PER_POLL', '10')),
             log_level=os.getenv('LOG_LEVEL', 'INFO').upper(),
             skip_initial_connection_test=os.getenv('SKIP_CONNECTION_TEST', 'true').lower() == 'true',
-            notify_on_start=os.getenv('NOTIFY_ON_START', 'true').lower() == 'true',
-            notify_on_shutdown=os.getenv('NOTIFY_ON_SHUTDOWN', 'true').lower() == 'true',
+            notify_on_print_start=os.getenv('NOTIFY_ON_PRINT_START', 'true').lower() == 'true',
+            notify_on_print_finish=os.getenv('NOTIFY_ON_PRINT_FINISH', 'true').lower() == 'true',
+            notify_on_error=os.getenv('NOTIFY_ON_ERROR', 'true').lower() == 'true',
+            notify_on_progress=os.getenv('NOTIFY_ON_PROGRESS', 'true').lower() == 'true',
+            progress_milestones=[
+                int(x.strip()) for x in os.getenv('PROGRESS_MILESTONES', '25,50,75').split(',')
+                if x.strip().isdigit()
+            ],
         )
         return config
     except (ValueError, ValidationError) as e:

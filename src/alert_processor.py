@@ -105,7 +105,7 @@ class AlertProcessor:
 
         logger.debug("SDCP response received", cmd=cmd, result=result, data=data)
 
-        if result != 0:
+        if result != 0 and config.notify_on_error:
             alert = Alert(
                 id=msg.get("Id", str(uuid.uuid4())),
                 title="SDCP Command Failed",
@@ -121,6 +121,8 @@ class AlertProcessor:
 
     async def process_error(self, msg: Dict[str, Any]) -> None:
         """Process an sdcp/error message — buffer as a high-severity alert."""
+        if not config.notify_on_error:
+            return
         data = msg.get("Data", {})
         alert = Alert(
             id=msg.get("Id", str(uuid.uuid4())),
@@ -188,7 +190,7 @@ class AlertProcessor:
             is_start = MachineStatus.PRINTING in current_status and MachineStatus.PRINTING not in prev_codes
             is_shutdown = MachineStatus.IDLE in current_status and MachineStatus.IDLE not in prev_codes
 
-            if is_start and config.notify_on_start:
+            if is_start and config.notify_on_print_start:
                 desc_parts = ["Printer has started a new job."]
                 if s.print_info and s.print_info.Filename:
                     desc_parts.append(f"File: {s.print_info.Filename}")
@@ -201,7 +203,7 @@ class AlertProcessor:
                     source="sdcp/status",
                 ))
                 logger.info("Print start alert buffered")
-            elif is_shutdown and config.notify_on_shutdown:
+            elif is_shutdown and config.notify_on_print_finish:
                 await self._buffer(Alert(
                     id=str(uuid.uuid4()),
                     title="Printer Idle / Shutdown",
@@ -226,7 +228,7 @@ class AlertProcessor:
 
     async def _check_progress_milestones(self, s, timestamp: int) -> None:
         """Buffer an alert when layer progress crosses 25 %, 50 %, or 75 %."""
-        if s.print_info is None:
+        if not config.notify_on_progress or s.print_info is None:
             return
 
         # Firmware Progress field is often stuck at 0; use layer-derived value
@@ -234,7 +236,7 @@ class AlertProcessor:
         if progress is None:
             return
 
-        for milestone in (25, 50, 75):
+        for milestone in config.progress_milestones:
             if self._last_progress is not None and self._last_progress < milestone and progress >= milestone:
                 await self._buffer(Alert(
                     id=str(uuid.uuid4()),

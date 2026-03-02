@@ -1,6 +1,6 @@
 """Pydantic model for application configuration."""
 
-from typing import Literal
+from typing import List, Literal
 from pydantic import BaseModel, Field
 
 
@@ -13,5 +13,8 @@ class Config(BaseModel):
     max_alerts_per_poll: int = Field(default=10, ge=1)
     log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR'] = 'INFO'
     skip_initial_connection_test: bool = True
-    notify_on_start: bool = True      # alert when status transitions to Printing
-    notify_on_shutdown: bool = True   # alert when status transitions to Idle (print done / shutdown)
+    notify_on_print_start: bool = True    # alert when status transitions to Printing
+    notify_on_print_finish: bool = True   # alert when status transitions to Idle (print done)
+    notify_on_error: bool = True          # alert on SDCP errors and failed commands
+    notify_on_progress: bool = True           # alert when print hits a progress milestone
+    progress_milestones: List[int] = Field(default=[25, 50, 75])  # progress % thresholds to alert on
