@@ -63,7 +63,7 @@ jobs:
             --exclude='build' \
             .
           mv ${tar_file}  .
-          echo "tar-file=${tar_file} >> $GITHUB_OUTPUT
+          echo "tar-file=${tar_file}" >> $GITHUB_OUTPUT
 
       - name: Upload artifacts to release
         env:
