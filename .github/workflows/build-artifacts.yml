@@ -57,8 +57,8 @@ jobs:
           path: dist/
 
       - name: Create a Release
-        uses: elgohr/Github-Release-Action@v5
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          title: ${{ env.FULL_TAG }}
+          tag_name: ${{ env.FULL_TAG }}
+          name: ${{ env.FULL_TAG }}
+          files: dist/*
