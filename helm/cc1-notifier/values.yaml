@@ -18,6 +18,12 @@ centauri:
 notify:
   onStart: "true"
   onShutdown: "true"
+  withSnapshot: "true"
+
+# Camera snapshot attached to Discord alerts
+# snapshotUrl: leave empty to default to http://<centauri.ip>:3031/video
+camera:
+  snapshotUrl: ""
 
 # Polling
 pollIntervalMinutes: "5"

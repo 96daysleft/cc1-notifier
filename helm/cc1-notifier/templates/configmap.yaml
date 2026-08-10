@@ -13,3 +13,7 @@ data:
   SKIP_CONNECTION_TEST: {{ .Values.skipConnectionTest | quote }}
   NOTIFY_ON_START: {{ .Values.notify.onStart | quote }}
   NOTIFY_ON_SHUTDOWN: {{ .Values.notify.onShutdown | quote }}
+  NOTIFY_WITH_SNAPSHOT: {{ .Values.notify.withSnapshot | quote }}
+  {{- if .Values.camera.snapshotUrl }}
+  CAMERA_SNAPSHOT_URL: {{ .Values.camera.snapshotUrl | quote }}
+  {{- end }}
