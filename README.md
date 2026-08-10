@@ -105,6 +105,8 @@ docker run --env-file .env cc1-notifier
 | `SKIP_CONNECTION_TEST` | Skip initial WebSocket connection test | `true` | ❌ |
 | `NOTIFY_ON_START` | Send an alert when a print job starts | `true` | ❌ |
 | `NOTIFY_ON_SHUTDOWN` | Send an alert when the printer goes idle/shuts down | `true` | ❌ |
+| `CAMERA_SNAPSHOT_URL` | HTTP snapshot URL for the printer camera | `http://<CENTAURI_IP host>:3031/video` | ❌ |
+| `NOTIFY_WITH_SNAPSHOT` | Attach a camera snapshot to Discord alerts | `true` | ❌ |
 
 ## Discord Webhook Setup
 

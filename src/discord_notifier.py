@@ -1,9 +1,10 @@
 """Discord webhook notifier for Centauri alerts."""
 
 import asyncio
+import json
 import aiohttp
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from .config import config, logger
 from .models.discord import DiscordEmbed, DiscordMessage, SEVERITY_COLORS, SEVERITY_EMOJIS
@@ -29,6 +30,42 @@ class DiscordNotifier:
         if self.session:
             await self.session.close()
     
+    async def fetch_snapshot(self) -> Optional[bytes]:
+        """Grab a single JPEG frame from the printer's camera, if configured.
+
+        Handles both a plain JPEG snapshot endpoint and an MJPEG
+        (multipart/x-mixed-replace) stream by pulling out the first frame.
+        """
+        if not config.camera_snapshot_url or not self.session:
+            return None
+        try:
+            async with self.session.get(
+                config.camera_snapshot_url,
+                timeout=aiohttp.ClientTimeout(total=5),
+            ) as response:
+                if response.status != 200:
+                    logger.warning("Camera snapshot request failed", status=response.status)
+                    return None
+
+                content_type = response.headers.get('Content-Type', '')
+                if 'multipart' in content_type or 'x-mixed-replace' in content_type:
+                    buf = b''
+                    async for chunk in response.content.iter_chunked(4096):
+                        buf += chunk
+                        start = buf.find(b'\xff\xd8')
+                        end = buf.find(b'\xff\xd9', start + 2) if start != -1 else -1
+                        if start != -1 and end != -1:
+                            return buf[start:end + 2]
+                        if len(buf) > 2_000_000:
+                            break
+                    logger.warning("Could not find a JPEG frame in camera stream")
+                    return None
+
+                return await response.read()
+        except Exception as e:
+            logger.warning("Failed to fetch camera snapshot", error=str(e))
+            return None
+
     @staticmethod
     def _to_iso(timestamp: str) -> str:
         """Convert a Unix timestamp string or ISO string to UTC ISO 8601."""
@@ -113,14 +150,19 @@ class DiscordNotifier:
         )
     
     async def send_alert(self, alert: Alert) -> bool:
-        """Send a single alert to Discord."""
+        """Send a single alert to Discord, with a camera snapshot attached if available."""
         embed = self.create_alert_embed(alert)
+
+        snapshot = await self.fetch_snapshot() if config.notify_with_snapshot else None
+        if snapshot:
+            embed.image = {'url': 'attachment://snapshot.jpg'}
+
         message = DiscordMessage(
             username='Centauri Alert System',
             embeds=[embed]
         )
-        
-        return await self.send_message(message)
+
+        return await self.send_message(message, image_bytes=snapshot)
     
     async def send_alerts(self, alerts: List[Alert]) -> int:
         """Send multiple alerts to Discord individually."""
@@ -157,28 +199,42 @@ class DiscordNotifier:
         # Create summary + individual embeds for multiple alerts
         summary_embed = self.create_summary_embed(alerts)
         alert_embeds = [self.create_alert_embed(alert) for alert in alerts[:3]]  # Limit to 3 individual alerts
-        
+
+        snapshot = await self.fetch_snapshot() if config.notify_with_snapshot else None
+        if snapshot:
+            summary_embed.image = {'url': 'attachment://snapshot.jpg'}
+
         message = DiscordMessage(
             username='Centauri Alert System',
             content=f"🚨 **{len(alerts)} New Alert{'s' if len(alerts) != 1 else ''}**",
             embeds=[summary_embed] + alert_embeds
         )
-        
-        success = await self.send_message(message)
+
+        success = await self.send_message(message, image_bytes=snapshot)
         return len(alerts) if success else 0
     
-    async def send_message(self, message: DiscordMessage) -> bool:
-        """Send a message to Discord webhook."""
+    async def send_message(self, message: DiscordMessage, image_bytes: Optional[bytes] = None) -> bool:
+        """Send a message to Discord webhook, optionally with an attached image."""
         if not self.session:
             logger.error("Discord session not initialized")
             return False
-        
+
         try:
             # Convert to dict for JSON serialization
             message_dict = message.model_dump(exclude_none=True)
-            
-            async with self.session.post(config.discord_webhook_url, json=message_dict) as response:
-                if response.status == 204:
+
+            if image_bytes:
+                form = aiohttp.FormData()
+                form.add_field('payload_json', json.dumps(message_dict), content_type='application/json')
+                form.add_field('files[0]', image_bytes, filename='snapshot.jpg', content_type='image/jpeg')
+                post_kwargs = {'data': form}
+            else:
+                post_kwargs = {'json': message_dict}
+
+            async with self.session.post(config.discord_webhook_url, **post_kwargs) as response:
+                # Discord returns 204 for JSON-only posts, 200 (with the created
+                # message body) for multipart/file-upload posts.
+                if response.status in (200, 204):
                     logger.debug("Message sent to Discord successfully")
                     return True
                 else:

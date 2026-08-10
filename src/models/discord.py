@@ -11,6 +11,7 @@ class DiscordEmbed(BaseModel):
     timestamp: Optional[str] = None
     fields: Optional[List[Dict[str, Any]]] = None
     footer: Optional[Dict[str, str]] = None
+    image: Optional[Dict[str, str]] = None
 
 
 class DiscordMessage(BaseModel):

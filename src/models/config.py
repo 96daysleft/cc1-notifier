@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 
 class Config(BaseModel):
-    centauri_ip: str = Field(default="192.168.45.245")
+    centauri_ip: str = Field(default="")
     centauri_port: int = Field(default=3030)        # SDCP WebSocket port
     mainboard_id: str = Field(default="")           # Required for SDCP topic routing
     discord_webhook_url: str = ""
@@ -18,3 +18,5 @@ class Config(BaseModel):
     notify_on_error: bool = True          # alert on SDCP errors and failed commands
     notify_on_progress: bool = True           # alert when print hits a progress milestone
     progress_milestones: List[int] = Field(default=[25, 50, 75])  # progress % thresholds to alert on
+    camera_snapshot_url: str = Field(default="")  # e.g. http://<ip>:3031/video
+    notify_with_snapshot: bool = True         # attach a camera snapshot to Discord alerts

@@ -16,8 +16,10 @@ load_dotenv()
 def get_config() -> ConfigModel:
     """Load and validate configuration from environment variables."""
     try:
+        centauri_ip = os.getenv('CENTAURI_IP', '')
+        host = centauri_ip.replace('ws://', '').replace('wss://', '').split(':')[0]
         config = ConfigModel(
-            centauri_ip=os.getenv('CENTAURI_IP', '192.168.45.245'),
+            centauri_ip=centauri_ip,
             centauri_port=int(os.getenv('CENTAURI_PORT', '3030')),
             mainboard_id=os.getenv('MAINBOARD_ID', ''),
             discord_webhook_url=os.getenv('DISCORD_WEBHOOK_URL', ''),
@@ -33,6 +35,8 @@ def get_config() -> ConfigModel:
                 int(x.strip()) for x in os.getenv('PROGRESS_MILESTONES', '25,50,75').split(',')
                 if x.strip().isdigit()
             ],
+            camera_snapshot_url=os.getenv('CAMERA_SNAPSHOT_URL', f'http://{host}:3031/video'),
+            notify_with_snapshot=os.getenv('NOTIFY_WITH_SNAPSHOT', 'true').lower() == 'true',
         )
         return config
     except (ValueError, ValidationError) as e:
