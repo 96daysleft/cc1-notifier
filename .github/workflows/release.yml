@@ -83,4 +83,4 @@ jobs:
       - name: Push chart to GHCR
         run: |
           helm push /tmp/helm-output/cc1-notifier-*.tgz \
-            oci://ghcr.io/${{ github.repository_owner }}
+            oci://ghcr.io/${{ github.repository_owner }}/charts
